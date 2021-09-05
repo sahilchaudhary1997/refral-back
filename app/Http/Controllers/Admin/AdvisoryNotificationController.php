@@ -2,17 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\roles;
 use App\color;
 use App\category;
-//use App\Http\Requests\Admin\AddAdminCoursesRequest;
 use App\Http\Requests\Admin\AddAdminAdvisoryNotificationRequest;
-
-// use App\Http\Requests\Admin\UpdateAdminCoursesRequest;
 use App\Http\Requests\Admin\UpdateAdminAdvisoryNotificationRequest;
+use App\Http\Requests\Admin\ListAdminAdvisoryNotificationRequest;
+
 use Config;
 use App\Models\Courses;
 use App\Models\AdvisoryNotification;
@@ -20,8 +18,11 @@ use App\Models\ModuleType;
 use App\Models\Level;
 use App\Models\Markets;
 use App\Models\DeviceToken;
+
+use App\Models\AdvisoryNotificationReports;
+use Excel;
+// use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AdvisoryNotificationexport;
-use Maatwebsite\Excel\Facades\Excel;
 
 class AdvisoryNotificationController extends SystemAdminController {
 
@@ -31,11 +32,6 @@ class AdvisoryNotificationController extends SystemAdminController {
         parent::__construct(); 
     }
 
-    public function export() 
-    {
-        return Excel::download(new AdvisoryNotificationexport, 'Advisorynotifyexport.xlsx');
-    }
-
     public function index(Request $request) {
         $filter = $request->all();
         $breadcum = $this->breadcum;
@@ -43,11 +39,24 @@ class AdvisoryNotificationController extends SystemAdminController {
             if (!empty($filter['search'])) {
                 $q->where('script', 'LIKE', '%' . $filter['search'] . '%');
             }
+            if (!empty($filter['marketslist'])) {
+                $q->where('marketId', $filter['marketslist']);
+            }
+            if (!empty($filter['advisorycourse'])) {
+                $q->where('courseId', $filter['advisorycourse']);
+            }
+
+            if (!empty($filter['fromdatelist']) && !empty($filter['todatelist']) ) {
+                $from = date('Y-m-d',strtotime($filter['fromdatelist']));
+                $to = date('Y-m-d',strtotime($filter['todatelist']));
+                $q->whereBetween('tradeDate', [$from, $to]);
+            }            
         })
         ->where('userId',NULL)
         ->where('parentId',NULL)
         ->orderBy('id', 'asc')->paginate(Config::get('constants.pageRecords'));
-        return view('admin.manage_advisorynotification.list', compact('breadcum', 'users', 'filter'));
+        $markets = Markets::where('is_active', '1')->where('is_delete', '0')->get();
+        return view('admin.manage_advisorynotification.list', compact('breadcum', 'users', 'filter','markets'));
     }
 
     public function create() {
@@ -118,9 +127,6 @@ class AdvisoryNotificationController extends SystemAdminController {
 
     public function changerequest($id) {
         $user = AdvisoryNotification::find($id); 
-        // echo "<pre>";
-        // print_r($user);
-        // exit;  
              
         $breadcum = $this->breadcum;
         $moduleId = $user->moduleId;
@@ -222,11 +228,16 @@ class AdvisoryNotificationController extends SystemAdminController {
         
         $advisorymarketid = $request->id;
         $moduletype = $request->moduletype;
-        $coursesdata = Courses::select('id','varTitle as title')->where('market',$advisorymarketid)->where('moduleTypes',$moduletype)->get();
+        $coursesdata = Courses::select('id','varTitle as title')->where('market',$advisorymarketid)->where('moduleTypes',$moduletype)->where('is_active', '1')->where('is_delete', '0')->get();
         
         $html = '';
+        $functionenable = 'onChange="getreportsdates(this.value)"';
+        if($request->hidefunction == "1"){
+            $functionenable = '';
+        }
         if(!$coursesdata->isEmpty()){
-            $html.= '<select name="advisorycourse" id="advisorycourse" class="form-control" >';
+            $html.= '<select name="advisorycourse" id="advisorycourse" '.$functionenable.' class="form-control blackcolor" >';
+            $html.= '<option value="">Please select course</option>';
             foreach($coursesdata as $coursekey => $courseval){
                 $html.= '<option value="'.$courseval['id'].'">'.$courseval['title'].'</option>';
             }
@@ -235,5 +246,67 @@ class AdvisoryNotificationController extends SystemAdminController {
 
         echo $html;
         exit;
+    }
+    
+    public function advisorycoursesreportgenerate(ListAdminAdvisoryNotificationRequest $request){
+                
+        $from = date('Y-m-d',strtotime($request->fromdate));
+        $to = date('Y-m-d',strtotime($request->todate));
+        
+        $advtisecount = AdvisoryNotification::select('id','advisorySection','tradeDate','script','action_trade','quantity','price','stoploss','status','target','timeline')->where('userId', NULL)->where('parentId', NULL)->where('courseId', $request->advisorycourse)->where('marketId', $request->markets)->whereBetween('tradeDate', [$from, $to])->count();  
+
+        // Excel::store(new AdvisoryNotificationexport('','',8,11),  'usersReport.xlsx');
+        // Excel::store(new AdvisoryNotificationexport('','',8,11),  'reports/REPORT-FORMAT-FOR-MOBILE-APP.xls', 'public_uploads');
+        if($advtisecount>0){
+            $cousenamear = Courses::select('id','varTitle as title')->where('id',$request->advisorycourse)->first();
+            $couseNamewithoutspace = preg_replace("/[^a-zA-Z]+/", "_", $cousenamear->title);
+            
+            $reportfilename = $couseNamewithoutspace."_".$from."_TO_".$to."_".$request->markets.'.xls';
+           
+            if($request->reporttype=="2"){                
+                return Excel::download(new AdvisoryNotificationexport($request->fromdate,$request->todate,$request->advisorycourse,$request->markets), $reportfilename);
+            }else{
+                $advtisreportarr = array();
+                $advtisreportarr['moduleId'] = '2';
+                $advtisreportarr['marketId'] = $request->markets;
+                $advtisreportarr['courseId'] = $request->advisorycourse;
+                $advtisreportarr['fromDate'] = $from;
+                $advtisreportarr['toDate'] = $to;
+                $advtisreportarr['reportName'] = $reportfilename;
+
+                AdvisoryNotificationReports::create($advtisreportarr);
+                Excel::store(new AdvisoryNotificationexport($request->fromdate,$request->todate,$request->advisorycourse,$request->markets),  'reports/'.$reportfilename, 'public_uploads');
+                return redirect()->route('adminAdvisoryNotification')->with('success', 'Advisory Notification report generate successfully.');
+            }
+
+            
+        }else{
+            return redirect()->route('adminAdvisoryNotification')->with('success', 'Advisory Notification report record not found.');
+        }
+        
+        
+     
+    }
+
+    public function getadvisoryreportdate(Request $request){
+        
+        $response = [
+            'fromdate' => '',
+            'todate' => ''
+        ];	
+        $courseid = $request->courseid;
+        $moduleid = $request->moduletype;
+        $marketid = $request->markets;
+        $advisoryReportDates = AdvisoryNotificationReports::select('fromDate','toDate')->where('marketId',$marketid)->where('courseId',$courseid)->where('moduleId',$moduleid)->first();
+        if(!empty($advisoryReportDates)){
+            $response['fromdate'] = $advisoryReportDates['fromDate'];
+            $response['todate'] = $advisoryReportDates['toDate'];
+        }
+        
+        return response()->json($response);		
+        
+      //  $coursesdata = Courses::select('id','varTitle as title')->where('market',$advisorymarketid)->where('moduleTypes',$moduletype)->get();
+        
+        
     }
 }

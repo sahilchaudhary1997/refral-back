@@ -33,6 +33,8 @@ class AddAdminCoursesRequest extends FormRequest
             'indiafees' => 'required|numeric',
             'worldfees' => 'required|numeric',
             'courseduration' => 'required|numeric',
+            'offlinefees' => 'numeric',
+            'registerlink' => 'url',
         ];
     }
     
@@ -51,6 +53,9 @@ class AddAdminCoursesRequest extends FormRequest
 			'worldfees.numeric'  => 'The world fees must be a number.',
             'courseduration.required'  => 'A course duration is required',
 			'courseduration.numeric'  => 'The course duration must be a number.',
+            'offlinefees.numeric'  => 'The offline fees must be a number.',
+            'registerlink.url'  => 'The offline course link format is invalid.'
+            
         ];
     }
 }

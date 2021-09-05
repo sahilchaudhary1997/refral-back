@@ -55,7 +55,7 @@ Route::post('getDashboard ', [DashboardController::class, 'getDashboard']);
 Route::post('getAboutUs ', [PagesController::class, 'getAboutUs']);
 Route::post('getPrivacyPolicy ', [PagesController::class, 'getPrivacyPolicy']);
 Route::post('getTermsandConditions ', [PagesController::class, 'getTermsandConditions']);
-
+Route::post('getOfflineCourses', [CoursesController::class, 'getOfflineCourses']);
 
 Route::group(['middleware' => ['auth:api']], function(){
     Route::resource('users', UsersController::class);

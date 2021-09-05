@@ -10,7 +10,6 @@ use Auth;
 use App\Models\UserChat;
 use admins;
 use App\Models\DeviceToken;
-use Image;
 
 class DashboardController extends SystemAdminController
 {

@@ -24,6 +24,8 @@ class PermissionServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        
+        Blade::if('permission', function ($expression) {
+            return ManagePermission($expression);
+        });
     }
 }

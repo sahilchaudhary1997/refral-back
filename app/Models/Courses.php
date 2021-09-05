@@ -27,6 +27,8 @@ class Courses extends Model
         'market',
         'coursePhoto',
         'courseDuration',
+        'offlineCourseFee',
+        'offlineRegisterLink',
     ];
 	
 	public static function getCourseByModuleId($id)

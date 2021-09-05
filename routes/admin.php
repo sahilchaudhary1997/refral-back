@@ -199,12 +199,11 @@ Route::group(['middleware' => ['IsAdmin', 'AdminPermission'], 'namespace' => 'Ad
    // Route::get('/advisorynotification/delete/{id}', 'AdvisoryNotificationController@delete')->name('adminAdvisoryNotificationDelete');
     Route::post('/advisorynotification/publish', 'AdvisoryNotificationController@publish')->name('adminAdvisoryNotificationPublish');
 	
-    Route::post('/advisorynotification/advisorycourses', 'AdvisoryNotificationController@advisorycoursesbymarketid')->name('advisorycourses'); 
-    Route::get('/advisorynotification/export', 'AdvisoryNotificationController@export');
-   
+    Route::post('/advisorynotification/advisorycourses', 'AdvisoryNotificationController@advisorycoursesbymarketid')->name('advisorycourses');    
     
-	
-	
+	Route::post('/advisorynotification/advisorycoursesreportgenerate', 'AdvisoryNotificationController@advisorycoursesreportgenerate')->name('advisorycoursesreportgenerate'); 
+	Route::post('/advisorynotification/getadvisoryreportdate', 'AdvisoryNotificationController@getadvisoryreportdate')->name('getadvisoryreportdate');
+	Route::post('/getcoursesdetails', 'ManageAdminCoursesController@getCoursesDetails')->name('getCoursesDetails');
 });
 //Routes check with login
 Route::group(['middleware' => 'IsAdmin', 'namespace' => 'Admin'], function() {

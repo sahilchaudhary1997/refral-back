@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Cookie;
 use Crypt;
 use View;
 use Config;
-use Image;
 
 class SystemAdminController extends Controller
 {

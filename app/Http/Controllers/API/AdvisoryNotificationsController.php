@@ -13,7 +13,7 @@ use Validator;
 use Auth;
 use Illuminate\Support\Facades\Hash;
 use DB;
-use Image;
+
 
 class AdvisoryNotificationsController extends Controller
 {

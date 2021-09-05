@@ -32,7 +32,7 @@
             <li class="nav-item nav-profile dropdown">
               <a class="nav-link dropdown-toggle" id="profileDropdown" href="#" data-toggle="dropdown" aria-expanded="false">
                 <div class="nav-profile-img">
-                  <img src="{{Auth::guard('admin')->user()->image_id,32,32}}" alt="image">
+                  <img src="{{ResizeImage(Auth::guard('admin')->user()->image_id,32,32)}}" alt="image">
                   <span class="availability-status online"></span>
                 </div>
                 <div class="nav-profile-text">
@@ -40,11 +40,14 @@
                 </div>
               </a>
               <div class="dropdown-menu navbar-dropdown" aria-labelledby="profileDropdown">
-				
+				@permission('user_profile-list')
 					<a class="dropdown-item" href="{{route('adminUserProfile')}}"><i class="mdi mdi-account mr-2 text-success"></i> Profile </a>
 					<div class="dropdown-divider"></div>
+				@endpermission
+				@permission('change_password-list')
 					<a class="dropdown-item" href="{{route('adminChangePassword')}}"><i class="mdi mdi-account-key mr-2 text-primary"></i> Change Password </a>
 					<div class="dropdown-divider"></div>
+				@endpermission
 				<a class="dropdown-item" href="#" onclick="event.preventDefault();document.getElementById('logout-form').submit();"><i class="mdi mdi-power mr-2 text-primary"></i>Logout</a>
               </div>
             </li>

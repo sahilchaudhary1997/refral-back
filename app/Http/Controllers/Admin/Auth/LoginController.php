@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\Admin\LoginRequest;
 use Auth;
-use Image;
 
 class LoginController extends Controller
 {

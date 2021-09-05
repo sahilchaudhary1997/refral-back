@@ -334,4 +334,81 @@ class CoursesController extends Controller
 
 		return response()->json($response);
 	}
+	
+	public function getOfflineCourses(Request $request)
+    {
+        $lanshortcode = 'en';
+		if(!empty($request->userId) && $request->userId>0){
+			// for language begin
+			$UserLangDetail = User::select('users.id','users.intLanguageId','users.intMarketId','languages.name','languages.shortcode')	
+				->join('languages', 'languages.id', '=', 'users.intLanguageId')
+				->where('users.id', $request->userId)
+				->first();
+			$lanshortcode = $UserLangDetail['shortcode'];				
+			// for language end
+			$marketarr = explode(',', $UserLangDetail['intMarketId']);			
+		}
+		
+		$coursesdata =  Courses::select('courses.offlineCourseFee','courses.offlineRegisterLink','courses.chrIndiaFees', 'courses.chrWorldFees','courses.varTitle as title','courses.id as id','levels.name as levelName','markets.name as marketName','courses.coursePhotoName as PhotoName','courses.coursePhoto as imageName','courses.courseDuration as duration','module_types.name as module',DB::raw("CONCAT('https://picsum.photos/300/200','') AS imageUrl"),DB::raw("GROUP_CONCAT(categories.name) as categoriesName"), DB::raw("(SELECT COUNT(intNumberofRating) FROM reviews
+                                WHERE reviews.intCourseId = courses.id) as numberOfReview " ), DB::raw("(SELECT AVG(intNumberofRating) FROM reviews
+                                WHERE reviews.intCourseId = courses.id) as averageReview " ) )
+		->join('module_types', 'module_types.id', '=', 'courses.moduleTypes')
+		->join('levels', 'levels.id', '=', 'courses.level')
+		->join('markets', 'markets.id', '=', 'courses.market')
+        ->leftjoin("categories",DB::raw("FIND_IN_SET(categories.id,courses.categories)"),">",DB::raw("'0'"))
+        ->groupBy("courses.id")
+		->where('courses.moduleTypes', '1')
+		->where('courses.is_active', '1')
+		->where('courses.is_delete', '0')
+		->orderBy('courses.intOrder','asc');
+		if(!empty($marketarr)){
+			$coursesdata->whereIn('courses.market', $marketarr);
+		}
+		
+		$courses = $coursesdata->get();
+		
+		
+		foreach($courses as $coursekey => $courseval){
+			$fileurl = "";
+			if ($courseval['imageName']!="" && file_exists(public_path('uploads/'.$courseval['imageName']))){
+				$courses[$coursekey]['PhotoName'] = $courseval['PhotoName'];
+				// $fileurl = url('uploads/'.$courseval['imageName']);
+				$fileurl = ResizeImageUsingImageName($courseval['imageName'],'course',300,200);
+				
+				$courses[$coursekey]['imageUrl'] = $fileurl;
+			}
+			
+			if(!empty($request->userId) && $request->userId>0){
+
+				$userid = $request->userId;
+				$currentdate = date('Y-m-d H:i:s');
+				$id = $courseval['id'];
+				$paymenthis = PaymentsHistory::select('*')->where('userid', $userid)->where('courseid', $id)->where('payment_status', 'S')->orderBy('created_at','asc')->where('package_enddate', '>=', $currentdate)->get();
+			
+				$subscribecount = $paymenthis->count();
+				if($subscribecount>0){
+					$courses[$coursekey]['isSubscribed'] = true;
+				}else{
+					$courses[$coursekey]['isSubscribed'] = false;
+				}
+				
+			}else{
+				$courses[$coursekey]['isSubscribed'] = false;
+			}
+			
+			if($lanshortcode !="en"){
+				$courses[$coursekey]['title'] = languageTranslateUsingCurl('en',$lanshortcode, $courseval['title']);			
+			}
+		}		
+		
+		$response = [
+            'status' => true,
+            'statusCode' => 200,
+            'data'  => $courses,
+			'errormessage' => [],
+            'message' => ''
+        ];
+		
+		return response()->json($response);		
+	}
 }

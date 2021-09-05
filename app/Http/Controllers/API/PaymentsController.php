@@ -20,6 +20,7 @@ use Razorpay\Api\Api;
 use App\Models\Level;
 use Mail;
 use App\general_settings as GeneralSettings;
+use App\Models\AdvisoryNotificationReports;
 
 class PaymentsController extends Controller
 {
@@ -533,9 +534,15 @@ class PaymentsController extends Controller
 					$paymentongoing[$paymentkey]['PhotoName'] = $paymentval['PhotoName'];
 					$fileurl = ResizeImageUsingImageName($paymentval['imageName'],'course',300,200);	$paymentongoing[$paymentkey]['imageUrl'] = $fileurl;
 				}
-				if($paymentval['moduleType'] =="2"){	
+				if($paymentval['moduleType'] =="2"){
+				    $advisoryReportfiles = AdvisoryNotificationReports::select('reportName')->where('courseId',$paymentval['courseId'])->where('moduleId',$paymentval['moduleType'])->orderby('created_at','DESC')->first();
+					if(!empty($advisoryReportfiles)){
+						if ($advisoryReportfiles['reportName']!="" && file_exists(public_path('uploads/reports/'.$advisoryReportfiles['reportName']))){
+							$paymentongoing[$paymentkey]['reports'] = url('uploads/reports/'.$advisoryReportfiles['reportName']);
+						}
+					}
 				    // $paymentongoing[$paymentkey]['reports'] = url('uploads/reports/sample.pdf');
-					 $paymentongoing[$paymentkey]['reports'] = url('uploads/reports/REPORT-FORMAT-FOR-MOBILE-APP.xls');
+					// $paymentongoing[$paymentkey]['reports'] = url('uploads/reports/REPORT-FORMAT-FOR-MOBILE-APP.xls');
 				}
 			}
 

@@ -7,7 +7,7 @@
                 <form class="forms-sample" method="POST"  enctype="multipart/form-data" action="{{route('adminCoursesStore')}}" id="userCreate">
                     @csrf	
                     <div class="form-group">
-                        <label for="title">Title</label>
+                        <label for="title">Title *</label>
                         <input type="text" class="form-control" name="title" value="{{old('title')}}" placeholder="title" required />
                         @error('name')
                         <span class="invalid-feedback" role="alert" style="display:block;">
@@ -16,16 +16,16 @@
                         @enderror
                     </div>
 					
-					<div class="form-group">
+					<div class="form-group blackcolor">
                         <label for="moduletype">Module</label>                    
 						@foreach($moduletypes as $modulekey => $moduleval)
 						<input type="radio" class="" id="moduletype_{{$moduleval->id}}" @if($modulekey==0) checked @endif name="moduletype" value="{{$moduleval->id}}" />{{$moduleval->name}}					
                         @endforeach
                     </div>
 					
-					<div class="form-group">
-                        <label for="leveltype">Level</label>                    
-						<select class="form-control" name="leveltype" id="leveltype">
+					<div class="form-group blackcolor">
+                        <label for="leveltype">Level *</label>                    
+						<select class="form-control blackcolor" name="leveltype" id="leveltype">
                             <option value="">Select Level</option>
                             @foreach($leveltypes as $levelkey => $levelval)
                             
@@ -34,9 +34,9 @@
                         </select>
                     </div>
 					
-					<div class="form-group">
-                        <label for="markets">Markets</label>                    
-						<select class="form-control" name="markets" id="markets">
+					<div class="form-group blackcolor">
+                        <label for="markets">Markets *</label>                    
+						<select class="form-control blackcolor" name="markets" id="markets">
                             <option value="">Select Market</option>
                             @foreach($markets as $marketkey => $marketval)                            
                             <option value="{{$marketval->id}}">{{$marketval->name}}</option>
@@ -44,9 +44,9 @@
                         </select>
                     </div>
 					
-					<div class="form-group">
+					<div class="form-group blackcolor">
                         <label for="Category">Category</label>                    
-						<select class="form-control" name="category[]" id="category" multiple="multiple">
+						<select class="form-control blackcolor" name="category[]" id="category" multiple="multiple">
                             <option value="">Select Category</option>
                             @foreach($categorydata as $categorykey => $categoryval)                            
                             <option value="{{$categoryval->id}}">{{$categoryval->name}}</option>
@@ -55,7 +55,7 @@
                     </div>
 					
 					<div class="form-group">
-                        <label for="indiafees">India Fees(Rs)</label>
+                        <label for="indiafees">India Fees(Rs) *</label>
                         <input type="text" class="form-control" name="indiafees" id="indiafees" value="{{old('indiafees')}}" placeholder="India Fees" required />
                         @error('indiafees')
                         <span class="invalid-feedback" role="alert" style="display:block;">
@@ -65,7 +65,7 @@
                     </div>
 					
 					<div class="form-group">
-                        <label for="worldfees">World Fees($)</label>
+                        <label for="worldfees">World Fees($) *</label>
                         <input type="text" class="form-control" name="worldfees" id="worldfees" value="{{old('worldfees')}}" placeholder="World Fees" required />
                         @error('worldfees')
                         <span class="invalid-feedback" role="alert" style="display:block;">
@@ -75,7 +75,7 @@
                     </div>
 					
 					<div class="form-group">
-                        <label for="courseduration">Course Duration in days</label>
+                        <label for="courseduration">Course Duration in days *</label>
                         <input type="text" class="form-control" name="courseduration" id="courseduration" value="{{old('courseduration')}}" placeholder="Course Duration in days" required />
                         @error('courseduration')
                         <span class="invalid-feedback" role="alert" style="display:block;">
@@ -97,7 +97,7 @@
                     </div>
 					
 					<div class="form-group">
-						<label for="photo">Photo</label>
+						<label for="photo">Photo *</label>
 						<input type="file" class="form-control" id="coursephoto" name="coursephoto" placeholder="Photo" />
 						
 						
@@ -119,6 +119,19 @@
                         </select>
                     </div>
 					-->
+                    <div class="row" id="offlinecourse" @if(old('offlinefees')!="" || old('registerlink')!="" ) @else style="display:none" @endif >
+                        <div class="form-group col-md-2">
+                            <label for="offlinefees">Offline Fees(Rs)</label>
+                            <input type="text" class="form-control" name="offlinefees" id="offlinefees" value="{{old('offlinefees')}}" placeholder="Offline Course Fees"  />
+                            
+                        </div>
+                        <div class="form-group col-md-10">                            
+                            <label for="registerlink">Offline Course Link</label>
+                            <input type="text" class="form-control" name="registerlink" id="registerlink" value="{{old('registerlink')}}" placeholder="Course Register link"  />
+                        
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-gradient-primary mr-2">Add</button>
                     <button type="reset" class="btn btn-light">Reset</button>
                 </form>
@@ -132,6 +145,18 @@
 <script type="text/javascript">
     $(document).ready(function () {
         $('.ckeditor').ckeditor();
+    });
+
+    $("#markets").change(function(){
+        var marketid = $(this).val();        
+        
+        if(marketid=="11"){
+            $("#offlinecourse").show();
+        }else{
+            $("#offlinefees").val('');
+            $("#registerlink").val('');
+            $("#offlinecourse").hide();
+        }
     });
 </script>
 @endsection

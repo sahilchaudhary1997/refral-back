@@ -5,7 +5,7 @@
         <li class="nav-item nav-profile">
             <a href="#" class="nav-link">
                 <div class="nav-profile-image">
-                    <img src="{{Auth::guard('admin')->user()->image_id,44,44}}" alt="profile">
+                    <img src="{{ResizeImage(Auth::guard('admin')->user()->image_id,44,44)}}" alt="profile">
                     <span class="login-status online"></span>
                     <!--change to offline or busy as needed-->
                 </div>
@@ -16,14 +16,15 @@
                 <i class="mdi mdi-bookmark-check text-success nav-profile-badge"></i>
             </a>
         </li>
-         
+         @permission('dashboard-list')
         <li class="nav-item">
             <a class="nav-link" href="{{route('adminHome')}}">
                 <span class="menu-title">Dashboard</span>
                 <!--<i class="mdi mdi-home menu-icon"></i>-->
             </a>
         </li>
-        <li class="nav-item">
+        @endpermission
+		<li class="nav-item">
             <a class="nav-link" href="{{route('adminDashboardNotification')}}">
                 <span class="menu-title">Webniar Notification</span>
                 <!--<i class="mdi mdi-phone menu-icon"></i>-->
@@ -126,7 +127,7 @@
         </li>
         @endpermission
         -->
-		
+		@if(ManagePermission('admin_users-list') || ManagePermission('admin_roles-list') || ManagePermission('access_rights-list'))
 		<li class="nav-item">
 		  <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
 				<span class="menu-title">Admin Users</span>
@@ -135,17 +136,20 @@
 		  </a>
 		  <div class="collapse" id="ui-basic">
 				<ul class="nav flex-column sub-menu">
-				  
+				  @permission('admin_roles-list')
 						<li class="nav-item"> <a class="nav-link" href="{{route('adminRoleManager')}}">Manage Roles</a></li>
-				  
+				  @endpermission
+				  @permission('admin_users-list')
 						<li class="nav-item"> <a class="nav-link" href="{{route('adminUserManager')}}">Manage Users</a></li>
-				  
+				  @endpermission
+				  @permission('access_rights-list')
 						<li class="nav-item"> <a class="nav-link" href="{{route('adminAccessRights')}}">Access Rights</a></li>
-				  
+				  @endpermission
 				</ul>
 		  </div>
 		</li>
-		
+		@endif
+		@if(ManagePermission('general_settings-list'))
 			<li class="nav-item">
 			  <a class="nav-link" data-toggle="collapse" href="#ui-basic" aria-expanded="false" aria-controls="ui-basic">
 					<span class="menu-title">Settings & More</span>
@@ -154,12 +158,13 @@
 			  </a>
 			  <div class="collapse" id="ui-basic">
 					<ul class="nav flex-column sub-menu">
-					  
+					  @permission('general_settings-list')
 							<li class="nav-item"> <a class="nav-link" href="{{route('adminGeneralSettings')}}">General Settings</a></li>
-					  </ul>
+					  @endpermission
+					</ul>
 			  </div>
 			</li>
-		
+		@endif
 
     </ul>
 </nav>

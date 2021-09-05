@@ -26,13 +26,25 @@ class ManageAdminCoursesController extends SystemAdminController {
     public function index(Request $request) {
         $filter = $request->all();
         $breadcum = $this->breadcum;
+		$markets = Markets::where('is_active', '1')->where('is_delete', '0')->get();
+        $moduletypes = ModuleType::where('is_active', '1')->where('is_delete', '0')->get();
+        $leveltypes = Level::where('is_active', '1')->where('is_delete', '0')->get();
         $users = Courses::where(function($q)use($filter) {
+							if (!empty($filter['modulelist'])) {
+								$q->where('moduleTypes', $filter['modulelist']);
+							}
+							if (!empty($filter['levellist'])) {
+								$q->where('level',$filter['levellist']);
+							}
+							if (!empty($filter['marketslist'])) {
+								$q->where('market', $filter['marketslist']);
+							}
                             if (!empty($filter['search'])) {
                                 $q->where('varTitle', 'LIKE', '%' . $filter['search'] . '%');
                             }
                         })
                         ->orderBy('id', 'asc')->paginate(Config::get('constants.pageRecords'));
-        return view('admin.manage_courses.list', compact('breadcum', 'users', 'filter'));
+        return view('admin.manage_courses.list', compact('breadcum', 'users', 'filter','markets','moduletypes','leveltypes'));
     }
 
     public function create() {
@@ -73,6 +85,13 @@ class ManageAdminCoursesController extends SystemAdminController {
 		}		
         $inserarr['is_active'] = 1;
         $inserarr['is_delete'] = 0;
+		if($inserarr['market']=="11"){
+            $inserarr['offlineCourseFee'] = $request->offlinefees;
+            $inserarr['offlineRegisterLink'] = $request->registerlink;
+        }else{  
+            $inserarr['offlineCourseFee'] = '';
+            $inserarr['offlineRegisterLink'] = '';
+        }
         $role = Courses::create($inserarr);
         return redirect()->route('adminCourses')->with('success', 'New admin Courses added successfully.');
     }
@@ -117,6 +136,13 @@ class ManageAdminCoursesController extends SystemAdminController {
 		}		
         $updatearr['is_active'] = 1;
         $updatearr['is_delete'] = 0;
+		if($updatearr['market']=="11"){
+            $updatearr['offlineCourseFee'] = $request->offlinefees;
+            $updatearr['offlineRegisterLink'] = $request->registerlink;
+        }else{  
+            $updatearr['offlineCourseFee'] = '';
+            $updatearr['offlineRegisterLink'] = '';
+        }
 		Courses::where('id',$request->uid)->update($updatearr);
 
         // Courses::find($all['uid'])->update($all);
@@ -147,6 +173,27 @@ class ManageAdminCoursesController extends SystemAdminController {
 //        }
         Courses::destroy($id);
         return redirect()->back()->with('success', 'Admin Courses deleted successfully.');
+    }
+	
+	public function getCoursesDetails(Request $request){
+        
+        $marketId = $request->id;        
+        $coursesdata = Courses::select('id','varTitle as title')->where('market',$marketId)->where('is_active', '1')->where('is_delete', '0')->get();
+        
+        $html = '';        
+        $functionenable = '';
+      
+        if(!$coursesdata->isEmpty()){
+            $html.= '<select name="course" id="course" '.$functionenable.' class="form-control blackcolor" >';
+            $html.= '<option value="">Please select course</option>';
+            foreach($coursesdata as $coursekey => $courseval){
+                $html.= '<option value="'.$courseval['id'].'">'.$courseval['title'].'</option>';
+            }
+            $html.= '</select>';
+        }
+
+        echo $html;
+        exit;
     }
 
 }
